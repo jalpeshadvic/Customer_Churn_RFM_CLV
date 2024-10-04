@@ -351,10 +351,10 @@ def main():
             with col1:
                 st.session_state.total_spent = st.number_input('Total Purchase Amount (Overall) *', min_value=1, value=1)
             with col2:
-                st.session_state.status = st.number_input('Unique Product Category *', min_value=1)
+                st.session_state.purchase_diversity = st.number_input('Unique Product Category *', min_value=1)
             col1, col2 = st.columns(2)
             with col1:
-                st.session_state.purchase_diversity = st.selectbox('Average Status of Product *', ['canceled', 'closed', 'cod', 'complete', 'holded',
+                st.session_state.status = st.selectbox('Average Status of Product *', ['canceled', 'closed', 'cod', 'complete', 'holded',
                                                             'order_refunded', 'paid', 'pending', 'pending_paypal',
                                                             'processing', 'received', 'refund'])
             with col2:
