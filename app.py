@@ -120,7 +120,7 @@ def rfm_analysis():
     frequency_quartiles = [1, 1, 3, 5]
     monetary_quartiles = [100, 260, 814.92, 3299.90]
     # Step 1: Calculate Recency (days since last purchase)
-    recent_date = datetime.now()
+    recent_date = datetime(2021, 9, 30)
     last_purchase_date = pd.to_datetime(st.session_state.Last_purchase_date)
     recency = (recent_date - last_purchase_date).days
 
