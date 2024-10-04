@@ -195,31 +195,51 @@ def map_categorical_inputs(status,category,payment_method,Gender):
 
 def display_input_fields(disabled=False):
     st.text_input('Customer Full Name *', value=st.session_state.get('Name', ''), disabled=disabled, key='Name_display')
+
     col1, col2 = st.columns(2)
+    # Gender
     with col1:
         st.radio('Gender *', ['Male', 'Female'], horizontal=True, disabled=disabled, key='Gender_display', index=0 if st.session_state.get('Gender') == 'Male' else 1)
+    # Age
     with col2:
-        st.number_input('Age *', min_value=1, max_value=80, value=st.session_state.get('age', 1), disabled=disabled, key='age_display')
-    st.number_input('Total Purchase Amount *', min_value=1, value=st.session_state.get('total_spent', 1), disabled=disabled, key='total_spent_display')
+        st.number_input('Age *', min_value=1, max_value=150, value=st.session_state.get('age', 1), disabled=disabled, key='age_display')
+
+    col1, col2 = st.columns(2)
+    # Total Purchase Amount
+    with col1:
+        st.number_input('Total Purchase Amount (Overall) *', min_value=1, value=st.session_state.get('total_spent', 1), disabled=disabled, key='total_spent_display')
+    # Unique Product Category
+    with col2:
+        st.number_input('Unique Product Category *', min_value=1, value=st.session_state.get('status', 1), disabled=disabled, key='status_display')
     col1, col2 = st.columns(2)
     with col1:
-        st.number_input('Quantity *', min_value=1, value=st.session_state.get('Quantity', 1), disabled=disabled, key='Quantity_display')
+    # Product Status
+        st.selectbox('Average Status of Product *', ['canceled', 'closed', 'cod', 'complete', 'holded', 'order_refunded', 'paid', 'pending', 'pending_paypal', 'processing', 'received', 'refund'], 
+                 disabled=disabled, key='purchase_diversity_display', index=['canceled', 'closed', 'cod', 'complete', 'holded', 'order_refunded', 'paid', 'pending', 'pending_paypal', 'processing', 'received', 'refund'].index(st.session_state.get('purchase_diversity', 'canceled')))
+
+    
+    # Payment Method
     with col2:
-        st.number_input('Product Price *', min_value=1, value=st.session_state.get('Product_Price', 1), disabled=disabled, key='Product_Price_display')
-    st.selectbox('Status *', ['canceled', 'closed', 'cod', 'complete', 'holded', 'order_refunded', 'paid', 'pending', 'pending_paypal', 'processing', 'received', 'refund'], disabled=disabled, key='status_display', index=['canceled', 'closed', 'cod', 'complete', 'holded', 'order_refunded', 'paid', 'pending', 'pending_paypal', 'processing', 'received', 'refund'].index(st.session_state.get('status', 'canceled')))
+        st.multiselect('Payment Method *', ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah', 'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher', 'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite'],
+                       default=st.session_state.get('payment_method', []), disabled=disabled, key='payment_method_display')
+
+    # Date inputs
     col1, col2 = st.columns(2)
     with col1:
-        st.selectbox('Product Category *', ['Appliances', 'Beauty & Grooming', 'Books', 'Computing', 'Entertainment', 'Health & Sports', 'Home & Living', 'Kids & Baby', "Men's Fashion", 'Mobiles & Tablets', 'Others', 'School & Education', 'Soghaat', 'Superstore', "Women's Fashion"], disabled=disabled, key='category_display', index=['Appliances', 'Beauty & Grooming', 'Books', 'Computing', 'Entertainment', 'Health & Sports', 'Home & Living', 'Kids & Baby', "Men's Fashion", 'Mobiles & Tablets', 'Others', 'School & Education', 'Soghaat', 'Superstore', "Women's Fashion"].index(st.session_state.get('category', 'Appliances')))
+        st.date_input('First Purchase Date', value=st.session_state.get('First_purchase_date', datetime(2021, 1, 1)), disabled=disabled, key='First_purchase_date_display')
     with col2:
-        st.selectbox('Payment Method *', ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah', 'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher', 'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite'], disabled=disabled, key='payment_method_display', index=['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah', 'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher', 'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite'].index(st.session_state.get('payment_method', 'Easypay')))
-    st.date_input('Customer since', value=st.session_state.get('Customer_Since', datetime.now()), disabled=disabled, key='Customer_Since_display')
-    col1, col2 = st.columns(2)
-    with col1:
-        st.date_input('First Purchase Date', value=st.session_state.get('First_purchase_date', datetime.now()), disabled=disabled, key='First_purchase_date_display')
-    with col2:
-        st.date_input('Last Purchase Date', value=st.session_state.get('Last_purchase_date', datetime.now()), disabled=disabled, key='Last_purchase_date_display')
+        st.date_input('Last Purchase Date', value=st.session_state.get('Last_purchase_date', datetime(2021, 1, 1)), disabled=disabled, key='Last_purchase_date_display')
+
+    # Frequency
     st.number_input('Frequency of Customer *', min_value=1, value=st.session_state.get('frequency', 1), disabled=disabled, key='frequency_display')
-    st.number_input('Discount Amount *', min_value=0, value=st.session_state.get('discount_amount', 0), disabled=disabled, key='discount_amount_display')
+
+    col1, col2 = st.columns(2)
+    # Discount Percent
+    with col1:
+        st.number_input('Discount Percent (%) *', min_value=0, value=st.session_state.get('Discount_Percent', 0), disabled=disabled, key='Discount_Percent_display')
+    # Return Rate
+    with col2:
+        st.number_input('Return Rate *', min_value=0, value=st.session_state.get('return_rate', 0), disabled=disabled, key='return_rate_display')
 
 
 def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent,purchase_diversity,return_rate):
@@ -326,37 +346,38 @@ def main():
             with col1:
                 st.session_state.Gender = st.radio('Gender *',['Male','Female'],horizontal=True)
             with col2:
-                st.session_state.age = st.number_input('Age *', min_value=1, max_value=80, value=1)
-            st.session_state.total_spent = st.number_input('Total Purchase Amount *', min_value=1, value=1)
-            # col1, col2 = st.columns(2)
-            # with col1:
-            #     st.session_state.Quantity = st.number_input('Quantity *', min_value=1, value=1)
-            # with col2:
-            #     st.session_state.Product_Price = st.number_input('Product Price *', min_value=1, value=1)
-            st.session_state.status = st.selectbox('Status *', ['canceled', 'closed', 'cod', 'complete', 'holded',
-                                                            'order_refunded', 'paid', 'pending', 'pending_paypal',
-                                                            'processing', 'received', 'refund'])
+                st.session_state.age = st.number_input('Age *', max_value=150, value=1)
             col1, col2 = st.columns(2)
             with col1:
-                st.session_state.purchase_diversity = st.number_input('Product Category *', min_value=1)
+                st.session_state.total_spent = st.number_input('Total Purchase Amount (Overall) *', min_value=1, value=1)
             with col2:
-                st.session_state.payment_method = st.selectbox('Payment Method *', ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah',
+                st.session_state.status = st.number_input('Unique Product Category *', min_value=1)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.session_state.purchase_diversity = st.selectbox('Average Status of Product *', ['canceled', 'closed', 'cod', 'complete', 'holded',
+                                                            'order_refunded', 'paid', 'pending', 'pending_paypal',
+                                                            'processing', 'received', 'refund'])
+            with col2:
+                st.session_state.payment_method = st.multiselect('Payment Method *', ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah',
                                                                             'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher',
                                                                             'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite'])
-            min_date = datetime(1980,1,1)
-            max_date = datetime(2021, 9, 30)
-            st.session_state.Customer_Since = st.date_input('Customer since',min_value=min_date, max_value=max_date)
+            # min_date = datetime(1980,1,1)
+            # max_date = datetime(2021, 9, 30)
+            # st.session_state.Customer_Since = st.date_input('Customer since',min_value=min_date, max_value=max_date)
             col1, col2 = st.columns(2)
             with col1:
                 min_date = datetime(1980,1,1)
                 max_date = datetime(2021, 9, 30)
-                st.session_state.First_purchase_date = st.date_input('First Purchase Date',min_value=min_date, max_value=max_date)
+                st.session_state.First_purchase_date = st.date_input('First Purchase Product Date',min_value=min_date, max_value=max_date)
             with col2:
                 max_date = datetime(2021, 9, 30)
-                st.session_state.Last_purchase_date = st.date_input('Last Purchase Date', max_value=max_date)
+                st.session_state.Last_purchase_date = st.date_input('Last Purchase Product Date', max_value=max_date)
             st.session_state.frequency = st.number_input('Frequency of Customer *', min_value=1)
-            st.session_state.Discount_Percent = st.number_input('Discount_Percent *', min_value=0)
-            st.session_state.return_rate = st.number_input('Return Rate *', min_value=0)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.session_state.Discount_Percent = st.number_input('Discount_Percent (%) *', min_value=0)
+            with col2:
+                st.session_state.return_rate = st.number_input('Return Rate *', min_value=0)
 
             recency = (datetime(2021,9,30) - pd.to_datetime(st.session_state.Last_purchase_date)).days
             frequency = st.session_state.frequency
