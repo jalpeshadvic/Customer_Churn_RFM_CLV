@@ -3,13 +3,23 @@ import pandas as pd
 import numpy as np
 import pickle
 from datetime import datetime
+from PIL import Image
 
-
+Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
+st.set_page_config(page_title= 'Customer Churn Prediction App',layout="wide", page_icon=Im)
 with open('model_logic_churn.pkl', 'rb') as file:
     model = pickle.load(file)
 
 with open('scaler.pkl', 'rb') as scaler_file:
     scaler = pickle.load(scaler_file)
+
+hide_default_format = """
+       <style>
+       #MainMenu {visibility: hidden; }
+       footer {visibility: hidden;}
+       </style>
+       """
+st.markdown(hide_default_format, unsafe_allow_html=True)
 
 def assign_recency_score(recency, recency_quartiles):
     if recency <= recency_quartiles[0]:
@@ -312,7 +322,7 @@ def main():
         </div>
         """
         st.markdown(html_temp, unsafe_allow_html=True)
-
+        
         pages = ["Churn Prediction", "RFM Analysis", "Customer Lifetime Value", "EDA for Customer"]
 
         st.markdown(create_wizard_html(st.session_state.page), unsafe_allow_html=True)
@@ -336,7 +346,7 @@ def main():
                 sidebar_classes[i] = "active"
         
         if st.session_state.page == "Churn Prediction":
-
+            
             st.session_state.Name = st.text_input('Customer Full Name *')
             col1, col2 = st.columns(2)
             with col1:
