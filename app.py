@@ -171,11 +171,11 @@ def display_input_fields(disabled=False):
     
     col1, col2 = st.columns(2)
     with col1:
-        status_options = ['canceled', 'closed', 'cod', 'complete', 'holded', 'order_refunded', 'paid', 'pending', 'pending_paypal', 'processing', 'received', 'refund']
-        status_index = status_options.index(st.session_state.get('status', 'canceled'))
+        status_options = ['Canceled','Delivered', 'Returned']
+        status_index = status_options.index(st.session_state.get('status', 'Canceled'))
         st.selectbox('Average Status of Product *', status_options, index=status_index, disabled=disabled, key='status_display')
     with col2:
-        payment_options = ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah', 'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher', 'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite']
+        payment_options = ['COD',"EMI", "Paid via Wallet", "Paid via Banktransfer"]
         st.multiselect('Payment Method *', payment_options, default=st.session_state.get('payment_method', []), disabled=disabled, key='payment_method_display')
 
     col1, col2 = st.columns(2)
@@ -315,13 +315,9 @@ def main():
                 st.session_state.purchase_diversity = st.number_input('Unique Product Category *', min_value=1)
             col1, col2 = st.columns(2)
             with col1:
-                st.session_state.status = st.selectbox('Average Status of Product *', ['canceled', 'closed', 'cod', 'complete', 'holded',
-                                                            'order_refunded', 'paid', 'pending', 'pending_paypal',
-                                                            'processing', 'received', 'refund'])
+                st.session_state.status = st.selectbox('Average Status of Product *', ['Canceled','Delivered', 'Returned'])
             with col2:
-                st.session_state.payment_method = st.multiselect('Payment Method *', ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah',
-                                                                            'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher',
-                                                                            'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite'])
+                st.session_state.payment_method = st.multiselect('Payment Method *', ['COD',"EMI", "Paid via Wallet", "Paid via Banktransfer"])
             # min_date = datetime(1980,1,1)
             # max_date = datetime(2021, 9, 30)
             # st.session_state.Customer_Since = st.date_input('Customer since',min_value=min_date, max_value=max_date)
