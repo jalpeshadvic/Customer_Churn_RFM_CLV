@@ -23,10 +23,12 @@ st.markdown(hide_default_format, unsafe_allow_html=True)
 
 def assign_recency_score(recency, recency_quartiles):
     if recency <= recency_quartiles[0]:
-        return 4
+        return 5
     elif recency <= recency_quartiles[1]:
-        return 3
+        return 4
     elif recency <= recency_quartiles[2]:
+        return 3
+    elif recency <= recency_quartiles[3]:
         return 2
     else:
         return 1
@@ -39,8 +41,10 @@ def assign_frequency_score(frequency, frequency_quartiles):
         return 2
     elif frequency <= frequency_quartiles[2]:
         return 3
-    else:
+    elif frequency <= frequency_quartiles[3]:
         return 4
+    else:
+        return 5
 
 # Function to assign Monetary score based on predefined quartiles
 def assign_monetary_score(monetary, monetary_quartiles):
@@ -50,29 +54,32 @@ def assign_monetary_score(monetary, monetary_quartiles):
         return 2
     elif monetary <= monetary_quartiles[2]:
         return 3
-    else:
+    elif monetary <= monetary_quartiles[3]:
         return 4
+    else:
+        return 5
 
 # Function to assign customer segments based on RFM class
 def Segment_macro(rfm_class):
-    if rfm_class in ['112', '113', '122', '123', '133','132', '211', '212', '213', '221', '222', '223', '231','232', '233', '311', '312', '313', '321', '322', 
-                     '323', '331', '332', '333', '411', '412', '413', '421','422', '423', '431','432', '433']:  
-        return 'NewCustomer'
-    elif rfm_class in ['114', '124', '134', '214', '224', '234', '314', '324', '334', '414', '424', '434']: 
-        return 'Big Spender'
-    elif rfm_class in ['121','131']:
-        return 'Lost Customer'
-    elif rfm_class in ['144','143', '142', '141', '242', '243', '244', '344', '343', '441', '442', '443']:
-        return 'Loyal Customer'
-    elif rfm_class in ['444']: 
-        return 'Best Customer'
-    elif rfm_class in ['111']:
-        return 'DeadBeats'
+    if rfm_class in ['555', '554', '544', '545', '454', '455', '445', '543', '444', '435', '355', '354', '345', '344', '335',
+                     '553', '552', '551', '541', '542', '533', '532', '531', '452', '451', '442', '441', '431', '453', '433', '432',
+                     '423', '353', '352', '351', '342', '341', '333', '323']:
+        return 'Loyal_Customer'
+    elif rfm_class in ['512', '511', '422', '421', '412', '411', '311', '525', '524', '523', '522', '521', '515', '514', '513',
+                       '425', '424', '413', '414', '415', '315', '314', '313', '535', '534', '443', '434', '343', '334', '325', '324']:
+        return 'Promising_Customer'
+    elif rfm_class in ['331', '321', '312', '221', '213', '231', '241', '251', '255', '254', '245', '244', '253', '252', '243', '242',
+                       '235', '234', '225', '224', '152', '153', '145', '143', '142', '135', '134', '133', '125', '124', '155', '154',
+                       '144', '214', '215', '115', '114', '113']:
+        return 'Sleep_Customer'
+    elif rfm_class in ['332', '322', '231', '241', '251', '233', '232', '223', '222', '132', '123', '122', '212', '211', '111', '112',
+                       '121', '131', '141', '151']:
+        return 'Lost_Customer'
     else:
-        return 'Unknown'
+        return 'Other'
 
 def create_wizard_html(current_page):
-    pages = ["Churn Prediction", "RFM Analysis", "Customer Lifetime Value"]
+    pages = ["Behavioral Analysis", "Churn Prediction", "Sales Forcasting"]
     html = """
     <style>
     .step-wizard {
@@ -119,38 +126,82 @@ def create_wizard_html(current_page):
     return html
 
 def rfm_analysis():
-    recency_quartiles = [17, 50, 141]
-    frequency_quartiles = [1, 2, 5]
-    monetary_quartiles = [307.245, 674.450, 1661.640]
+    recency_quartiles = [111, 164, 237, 280]
+    frequency_quartiles = [1, 1, 3, 5]
+    monetary_quartiles = [100, 260, 814.92, 3299.90]
     # Step 1: Calculate Recency (days since last purchase)
-    recent_date = datetime(2011, 12, 9)
+    recent_date = datetime(2021, 9, 30)
     last_purchase_date = pd.to_datetime(st.session_state.Last_purchase_date)
     recency = (recent_date - last_purchase_date).days
 
     # Step 2: Calculate Frequency (assuming 'frequency' is the number of purchases made)
-    Frequency = st.session_state.frequency
-    print(Frequency)
+    frequency = st.session_state.frequency
 
     # Step 3: Calculate Monetary (total purchase amount)
-    Monetary = st.session_state.total_spent
+    monetary = st.session_state.total_spent
 
     # Step 4: Assign Recency scores based on the quartiles
-    r_quantile = assign_recency_score(recency, recency_quartiles)
+    recency_score = assign_recency_score(recency, recency_quartiles)
 
     # Step 5: Assign Frequency scores based on the quartiles
-    f_quantile = assign_frequency_score(Frequency, frequency_quartiles)
+    frequency_score = assign_frequency_score(frequency, frequency_quartiles)
 
     # Step 6: Assign Monetary scores based on the quartiles
-    m_quantile = assign_monetary_score(Monetary, monetary_quartiles)
+    monetary_score = assign_monetary_score(monetary, monetary_quartiles)
 
     # Step 7: Combine RFM scores into a single RFM class
-    rfm_quantile = str(r_quantile) + str(f_quantile) + str(m_quantile)
+    rfm_class = str(recency_score) + str(frequency_score) + str(monetary_score)
 
     # Step 8: Assign customer segment based on the RFM class
-    customer_segment = Segment_macro(rfm_quantile)
+    customer_segment = Segment_macro(rfm_class)
 
     # Return the RFM class and segment for the customer
-    return rfm_quantile, customer_segment
+    return rfm_class, customer_segment
+
+def calculate_clv():
+    # Ensure the Purchase_Date is in datetime format
+    first_purchase = pd.to_datetime(st.session_state.First_purchase_date)
+    last_purchase = pd.to_datetime(st.session_state.Last_purchase_date)
+    
+    # Calculate net revenue (assuming no returns for simplicity)
+    net_revenue = st.session_state.total_spent
+
+    order_count = st.session_state.frequency
+
+    # Calculate Customer Lifespan (days between first and last purchase)
+    customer_lifespan_days = (last_purchase - first_purchase).days
+
+    # Convert Lifespan to years
+    customer_lifespan_years = customer_lifespan_days / 365
+
+    #frequency of customer lifespan
+    ARPO = net_revenue / order_count
+
+    # Calculate CLV
+    clv = ARPO * order_count * customer_lifespan_years
+
+
+    return clv
+
+def map_categorical_inputs(status,category,payment_method,Gender):
+    status_mapping = {'canceled' :0, 'closed':1, 'cod':2, 'complete':3, 'holded':4,
+        'order_refunded':5, 'paid':6, 'pending':7, 'pending_paypal':8,
+        'processing':9, 'received':10, 'refund':11}
+    Product_Category_mapping = {'Appliances':0, 'Beauty & Grooming':1, 'Books':2, 'Computing':3,
+        'Entertainment':4, 'Health & Sports':5, 'Home & Living':6, 'Kids & Baby':7,
+        "Men's Fashion":8, 'Mobiles & Tablets':9, 'Others':10,
+        'School & Education':11, 'Soghaat':12, 'Superstore':13, "Women's Fashion":14}
+    Payment_Method_mapping = {'Easypay':0, 'Easypay_MA':1, 'Payaxis':2, 'apg':3, 'bankalfalah':4,
+        'cashatdoorstep':5, 'cod':6, 'customercredit':7, 'easypay_voucher':8,
+        'financesettlement':9, 'jazzvoucher':10, 'jazzwallet':11, 'mcblite':12}
+    Gender_mapping = {'Female' :0 , 'Male' :1}
+
+    mapped_status = status_mapping.get(status, -1)
+    mapped_Product_Category = Product_Category_mapping.get(category,-1)
+    mapped_Payment_Method = Payment_Method_mapping.get(payment_method,-1)
+    mapped_Gender = Gender_mapping.get(Gender,-1)
+
+    return mapped_status,mapped_Product_Category, mapped_Payment_Method, mapped_Gender
 
 def display_input_fields(disabled=False):
     st.text_input('Customer Full Name *', value=st.session_state.get('Name', ''), disabled=disabled, key='Name_display')
@@ -171,26 +222,20 @@ def display_input_fields(disabled=False):
     
     col1, col2 = st.columns(2)
     with col1:
-        status_options = ['Canceled','Delivered', 'Returned']
-        status_index = status_options.index(st.session_state.get('status', 'Canceled'))
+        status_options = ['canceled', 'closed', 'cod', 'complete', 'holded', 'order_refunded', 'paid', 'pending', 'pending_paypal', 'processing', 'received', 'refund']
+        status_index = status_options.index(st.session_state.get('status', 'canceled'))
         st.selectbox('Average Status of Product *', status_options, index=status_index, disabled=disabled, key='status_display')
     with col2:
-        payment_options = ['COD',"EMI", "Paid via Wallet", "Paid via Banktransfer"]
+        payment_options = ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah', 'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher', 'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite']
         st.multiselect('Payment Method *', payment_options, default=st.session_state.get('payment_method', []), disabled=disabled, key='payment_method_display')
-
-    col1, col2 = st.columns(2)
-    with col1: 
-        st.number_input('Average Quantity *', min_value=1,value=st.session_state.get('Quantity', 1), disabled=disabled, key='Quantity_display')
-    with col2:
-        st.number_input('Average Unit Price *', min_value=1,value=st.session_state.get('UnitPrice', 1), disabled=disabled, key='unitPrice_display')
     
     col1, col2 = st.columns(2)
     with col1:
-        min_date = datetime(2010, 1, 1)
-        max_date = datetime(2011, 12, 9)
+        min_date = datetime(1980, 1, 1)
+        max_date = datetime(2021, 9, 30)
         st.date_input('First Purchase Product Date', value=st.session_state.get('First_purchase_date', min_date), min_value=min_date, max_value=max_date, disabled=disabled, key='First_purchase_date_display')
     with col2:
-        max_date = datetime(2011, 12, 9)
+        max_date = datetime(2021, 9, 30)
         st.date_input('Last Purchase Product Date', value=st.session_state.get('Last_purchase_date', max_date), max_value=max_date, disabled=disabled, key='Last_purchase_date_display')
     
     st.number_input('Frequency of Customer *', min_value=1, value=st.session_state.get('frequency', 1), disabled=disabled, key='frequency_display')
@@ -203,8 +248,8 @@ def display_input_fields(disabled=False):
 
 
 
-def map_scalling_features(Quantity, UnitPrice,total_spent, recency, Frequency, Monetary, r_quantile,f_quantile,m_quantile,rfm_quantile):
-    scaled_features = scaler.transform([[Quantity, UnitPrice,total_spent, recency, Frequency, Monetary, r_quantile,f_quantile,m_quantile,rfm_quantile]])
+def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent,purchase_diversity,return_rate):
+    scaled_features = scaler.transform([[frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate]])
     return scaled_features[0]
 
 
@@ -217,10 +262,10 @@ def predict_output(scaled_features):
 def main():
         
         def reset():
-            st.session_state.page = "Churn Prediction"
+            st.session_state.page = "Behavioral Analysis"
+            st.session_state.behavioral_analysis_completed = False
             st.session_state.churn_prediction_completed = False
-            st.session_state.rfm_analysis_completed = False
-            st.session_state.customer_lifetime_value_completed = False
+            st.session_state.sales_forcasting_completed = False
             st.session_state.prediction_result = None
             st.session_state.clv_result = None
             
@@ -229,10 +274,10 @@ def main():
             
         
         if "page" not in st.session_state:
-            st.session_state.page = "Churn Prediction"
+            st.session_state.page = "Behavioral Analysis"
+            st.session_state.behavioral_analysis_completed = False
             st.session_state.churn_prediction_completed = False
-            st.session_state.rfm_analysis_completed = False
-            st.session_state.customer_lifetime_value_completed = False
+            st.session_state.sales_forcasting_completed = False
             st.session_state.prediction_result = None
             st.session_state.clv_result = None
         
@@ -278,7 +323,7 @@ def main():
         """
         st.markdown(html_temp, unsafe_allow_html=True)
         
-        pages = ["Churn Prediction", "RFM Analysis", "Customer Lifetime Value", "EDA for Customer"]
+        pages = ["Behavioral Analysis", "Churn Prediction", "Sales Forcasting", "Dashboard"]
 
         st.markdown(create_wizard_html(st.session_state.page), unsafe_allow_html=True)
 
@@ -300,7 +345,7 @@ def main():
             elif i == current_index:
                 sidebar_classes[i] = "active"
         
-        if st.session_state.page == "Churn Prediction":
+        if st.session_state.page == "Behavioral Analysis":
             
             st.session_state.Name = st.text_input('Customer Full Name *')
             col1, col2 = st.columns(2)
@@ -315,49 +360,30 @@ def main():
                 st.session_state.purchase_diversity = st.number_input('Unique Product Category *', min_value=1)
             col1, col2 = st.columns(2)
             with col1:
-                st.session_state.status = st.selectbox('Average Status of Product *', ['Canceled','Delivered', 'Returned'])
+                st.session_state.status = st.selectbox('Average Status of Product *', ['canceled', 'closed', 'cod', 'complete', 'holded',
+                                                            'order_refunded', 'paid', 'pending', 'pending_paypal',
+                                                            'processing', 'received', 'refund'])
             with col2:
-                st.session_state.payment_method = st.multiselect('Payment Method *', ['COD',"EMI", "Paid via Wallet", "Paid via Banktransfer"])
+                st.session_state.payment_method = st.multiselect('Payment Method *', ['Easypay', 'Easypay_MA', 'Payaxis', 'apg', 'bankalfalah',
+                                                                            'cashatdoorstep', 'cod', 'customercredit', 'easypay_voucher',
+                                                                            'financesettlement', 'jazzvoucher', 'jazzwallet', 'mcblite'])
             # min_date = datetime(1980,1,1)
             # max_date = datetime(2021, 9, 30)
             # st.session_state.Customer_Since = st.date_input('Customer since',min_value=min_date, max_value=max_date)
             col1, col2 = st.columns(2)
-            with col1: 
-                st.session_state.Quantity = st.number_input('Average Quantity *', min_value=1)
-            with col2:
-                st.session_state.UnitPrice = st.number_input('Average Unit Price *', min_value=1)
-            col1, col2 = st.columns(2)
             with col1:
-                min_date = datetime(2010,1,1)
-                max_date = datetime(2011, 12, 9)
+                min_date = datetime(1980,1,1)
+                max_date = datetime(2021, 9, 30)
                 st.session_state.First_purchase_date = st.date_input('First Purchase Product Date',min_value=min_date, max_value=max_date)
             with col2:
-                min_date = datetime(2010,1,1)
-                max_date = datetime(2011, 12, 9)
-                st.session_state.Last_purchase_date = st.date_input('Last Purchase Product Date',min_value=min_date, max_value=max_date)
+                max_date = datetime(2021, 9, 30)
+                st.session_state.Last_purchase_date = st.date_input('Last Purchase Product Date', max_value=max_date)
             st.session_state.frequency = st.number_input('Frequency of Customer *', min_value=1)
             col1, col2 = st.columns(2)
             with col1:
                 st.session_state.Discount_Percent = st.number_input('Discount_Percent (%) *', min_value=0)
             with col2:
                 st.session_state.return_rate = st.number_input('Return Rate *', min_value=0)
-
-            recency = (datetime(2021,9,30) - pd.to_datetime(st.session_state.Last_purchase_date)).days
-            Frequency = st.session_state.frequency
-            Monetary = st.session_state.total_spent
-            recency_quartiles = [17, 50, 141]
-            frequency_quartiles = [1, 2, 5]
-            monetary_quartiles = [307.245, 674.450, 1661.640]
-            r_quantile = assign_recency_score(recency, recency_quartiles)
-
-            # Step 5: Assign Frequency scores based on the quartiles
-            f_quantile = assign_frequency_score(Frequency, frequency_quartiles)
-
-            # Step 6: Assign Monetary scores based on the quartiles
-            m_quantile = assign_monetary_score(Monetary, monetary_quartiles)
-
-            # Step 7: Combine RFM scores into a single RFM class
-            rfm_quantile = str(r_quantile) + str(f_quantile) + str(m_quantile)
 
             # mapped_status, mapped_Product_Category,mapped_Payment_Method,mapped_Gender = map_categorical_inputs(st.session_state.status,st.session_state.category, 
             #                                                                                     st.session_state.payment_method, st.session_state.Gender)
@@ -367,47 +393,49 @@ def main():
             with col2:
                 col_predict, col_next = st.columns(2)
                 with col_predict:
-                    predict_button = st.button("Predict", key="predict_button")
+                    rfm_button = st.button("Predict", key="rfm_button")
                 with col_next:
                     next_button = st.button("Next", key="next_button")
-            if predict_button:
-                scaled_features = map_scalling_features(st.session_state.Quantity,st.session_state.UnitPrice,st.session_state.total_spent, 
-                                                        Monetary,recency,Frequency,r_quantile, f_quantile, m_quantile, rfm_quantile)
-                # map_categorical_inputs(st.session_state.Product_Category, st.session_state.Payment_Method, st.session_state.Gender)
-                result = predict_output(scaled_features)
-                formatted_result = "{:.2f}".format(float(result[0]))
-                st.session_state.prediction_result = formatted_result
-                st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")    
+            if rfm_button:
+                # Perform RFM analysis based on the user inputs
+                    rfm_class, customer_segment = rfm_analysis()       
+                # Display the RFM result and customer segment
+                    st.success(f"Customer {st.session_state.Name}'s RFM Class is {rfm_class} and Segment is {customer_segment}")   
             if next_button:
-                st.session_state.churn_prediction_completed = True
-                st.session_state.page = "RFM Analysis"
+                st.session_state.behavioral_analysis_completed = True
+                st.session_state.page = "Churn Prediction"
                 st.rerun()
 
-        elif st.session_state.page == "RFM Analysis":
+        elif st.session_state.page == "Churn Prediction":
 
             display_input_fields(disabled=True)
-
+            recency = (datetime(2021,9,30) - pd.to_datetime(st.session_state.Last_purchase_date)).days
+            frequency = st.session_state.frequency
+            monetary = st.session_state.total_spent
+            avg_order_value = monetary / frequency
 
             col1, col2, col3 = st.columns([1,2,1])
 
             with col2:
                 col_rfm, col_next = st.columns(2)
             with col_rfm:
-                rfm_button = st.button("Predict", key="rfm_button")
+                predict_button = st.button("Predict", key="predict_button")
             with col_next:
                 next_button = st.button("Next", key="next_button")
         
-            if rfm_button:
-                # Perform RFM analysis based on the user inputs
-                    rfm_class, customer_segment = rfm_analysis()       
-                # Display the RFM result and customer segment
-                    st.success(f"Customer {st.session_state.Name}'s RFM Class is {rfm_class} and Segment is {customer_segment}")
+            if predict_button:
+                scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,st.session_state.Discount_Percent, st.session_state.purchase_diversity, st.session_state.return_rate)
+                # map_categorical_inputs(st.session_state.Product_Category, st.session_state.Payment_Method, st.session_state.Gender)
+                result = predict_output(scaled_features)
+                formatted_result = "{:.2f}".format(float(result[0]))
+                st.session_state.prediction_result = formatted_result
+                st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
             if next_button:
-                st.session_state.rfm_analysis_completed = True
-                st.session_state.page = "Customer Lifetime Value"
+                st.session_state.churn_prediction_completed = True
+                st.session_state.page = "Sales Forcasting"
                 st.rerun()
 
-        elif st.session_state.page == "Customer Lifetime Value":
+        elif st.session_state.page == "Sales Forcasting":
 
             display_input_fields(disabled=True)
 
@@ -425,7 +453,7 @@ def main():
                 result = calculate_clv()
                 clv_result_score = "{:.2f}".format(result)
                 st.session_state.clv_result = clv_result_score
-                st.session_state.customer_lifetime_value_completed = True
+                st.session_state.sales_forcasting_completed = True
                 st.rerun() 
             
             if st.session_state.clv_result:
