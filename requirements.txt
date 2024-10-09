@@ -1,4 +1,6 @@
 streamlit
 pandas
-numpy 
+numpy
 scikit-learn
+statsmodels
+pmdarima
