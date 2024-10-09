@@ -4,6 +4,9 @@ import numpy as np
 import pickle
 from datetime import datetime
 from PIL import Image
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
 st.set_page_config(page_title= 'Customer Churn Prediction App',layout="wide", page_icon=Im)
@@ -79,7 +82,7 @@ def Segment_macro(rfm_class):
         return 'Other'
 
 def create_wizard_html(current_page):
-    pages = ["Churn Prediction", "RFM Analysis", "Customer Lifetime Value"]
+    pages = ["Behavioral Analysis", "Churn Prediction", "Sales Forcasting"]
     html = """
     <style>
     .step-wizard {
@@ -246,7 +249,22 @@ def display_input_fields(disabled=False):
     with col2:
         st.number_input('Return Rate *', min_value=0, value=st.session_state.get('return_rate', 0), disabled=disabled, key='return_rate_display')
 
+def ARIMA_Model_Prediction(data_col):
+    person = list(data_col)
+    Dataset = adfuller(person,autolag="AIC")
+    print(Dataset)
+    if Dataset[1]<0.05:
+        print("Data is Stationary")
+        stepwise_fit = auto_arima(person,trace=True,suppress_warnings=True)
+        order =  stepwise_fit.order
+        model = ARIMA(person,order=order)
+        model = model.fit()
+        pred = model.predict(start=8,end=13)
+        prediction = list(pred)
+        return prediction[-2:]
 
+    else:
+         print("Data is Non-Stationary")
 
 def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent,purchase_diversity,return_rate):
     scaled_features = scaler.transform([[frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate]])
@@ -262,24 +280,26 @@ def predict_output(scaled_features):
 def main():
         
         def reset():
-            st.session_state.page = "Churn Prediction"
+            st.session_state.page = "Behavioral Analysis"
+            st.session_state.behavioral_analysis_completed = False
             st.session_state.churn_prediction_completed = False
-            st.session_state.rfm_analysis_completed = False
-            st.session_state.customer_lifetime_value_completed = False
+            st.session_state.sales_forcasting_completed = False
             st.session_state.prediction_result = None
             st.session_state.clv_result = None
+            st.session_state.clv_result_2 = None
             
             # Use st.rerun() instead of st.experimental_rerun()
             st.rerun()
             
         
         if "page" not in st.session_state:
-            st.session_state.page = "Churn Prediction"
+            st.session_state.page = "Behavioral Analysis"
+            st.session_state.behavioral_analysis_completed = False
             st.session_state.churn_prediction_completed = False
-            st.session_state.rfm_analysis_completed = False
-            st.session_state.customer_lifetime_value_completed = False
+            st.session_state.sales_forcasting_completed = False
             st.session_state.prediction_result = None
             st.session_state.clv_result = None
+            st.session_state.clv_result_2 = None
         
         html_temp = """
         <style>
@@ -323,7 +343,7 @@ def main():
         """
         st.markdown(html_temp, unsafe_allow_html=True)
         
-        pages = ["Churn Prediction", "RFM Analysis", "Customer Lifetime Value", "EDA for Customer"]
+        pages = ["Behavioral Analysis", "Churn Prediction", "Sales Forcasting", "Dashboard"]
 
         st.markdown(create_wizard_html(st.session_state.page), unsafe_allow_html=True)
 
@@ -345,7 +365,7 @@ def main():
             elif i == current_index:
                 sidebar_classes[i] = "active"
         
-        if st.session_state.page == "Churn Prediction":
+        if st.session_state.page == "Behavioral Analysis":
             
             st.session_state.Name = st.text_input('Customer Full Name *')
             col1, col2 = st.columns(2)
@@ -385,11 +405,6 @@ def main():
             with col2:
                 st.session_state.return_rate = st.number_input('Return Rate *', min_value=0)
 
-            recency = (datetime(2021,9,30) - pd.to_datetime(st.session_state.Last_purchase_date)).days
-            frequency = st.session_state.frequency
-            monetary = st.session_state.total_spent
-            avg_order_value = monetary / frequency
-
             # mapped_status, mapped_Product_Category,mapped_Payment_Method,mapped_Gender = map_categorical_inputs(st.session_state.status,st.session_state.category, 
             #                                                                                     st.session_state.payment_method, st.session_state.Gender)
 
@@ -398,10 +413,36 @@ def main():
             with col2:
                 col_predict, col_next = st.columns(2)
                 with col_predict:
-                    predict_button = st.button("Predict", key="predict_button")
+                    rfm_button = st.button("Predict", key="rfm_button")
                 with col_next:
                     next_button = st.button("Next", key="next_button")
-                
+            if rfm_button:
+                # Perform RFM analysis based on the user inputs
+                    rfm_class, customer_segment = rfm_analysis()       
+                # Display the RFM result and customer segment
+                    st.success(f"Customer {st.session_state.Name}'s RFM Class is {rfm_class} and Segment is {customer_segment}")   
+            if next_button:
+                st.session_state.behavioral_analysis_completed = True
+                st.session_state.page = "Churn Prediction"
+                st.rerun()
+
+        elif st.session_state.page == "Churn Prediction":
+
+            display_input_fields(disabled=True)
+            recency = (datetime(2021,9,30) - pd.to_datetime(st.session_state.Last_purchase_date)).days
+            frequency = st.session_state.frequency
+            monetary = st.session_state.total_spent
+            avg_order_value = monetary / frequency
+
+            col1, col2, col3 = st.columns([1,2,1])
+
+            with col2:
+                col_rfm, col_next = st.columns(2)
+            with col_rfm:
+                predict_button = st.button("Predict", key="predict_button")
+            with col_next:
+                next_button = st.button("Next", key="next_button")
+        
             if predict_button:
                 scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,st.session_state.Discount_Percent, st.session_state.purchase_diversity, st.session_state.return_rate)
                 # map_categorical_inputs(st.session_state.Product_Category, st.session_state.Payment_Method, st.session_state.Gender)
@@ -411,36 +452,23 @@ def main():
                 st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
             if next_button:
                 st.session_state.churn_prediction_completed = True
-                st.session_state.page = "RFM Analysis"
+                st.session_state.page = "Sales Forcasting"
                 st.rerun()
 
-        elif st.session_state.page == "RFM Analysis":
+        elif st.session_state.page == "Sales Forcasting":
 
-            display_input_fields(disabled=True)
+            df = pd.read_csv('Customer_data.csv')
+            st.session_state.customer_ID = st.selectbox("Select Customer ID", df['CustomerID'].unique(), index=None)
 
+            customer_data = df[df['CustomerID'] == st.session_state.customer_ID]
 
-            col1, col2, col3 = st.columns([1,2,1])
+            total_values = customer_data['Total'].values
 
-            with col2:
-                col_rfm, col_next = st.columns(2)
-            with col_rfm:
-                rfm_button = st.button("Predict", key="rfm_button")
-            with col_next:
-                next_button = st.button("Next", key="next_button")
-        
-            if rfm_button:
-                # Perform RFM analysis based on the user inputs
-                    rfm_class, customer_segment = rfm_analysis()       
-                # Display the RFM result and customer segment
-                    st.success(f"Customer {st.session_state.Name}'s RFM Class is {rfm_class} and Segment is {customer_segment}")
-            if next_button:
-                st.session_state.rfm_analysis_completed = True
-                st.session_state.page = "Customer Lifetime Value"
-                st.rerun()
+            st.write(f"Data for Customer ID {st.session_state.customer_ID}:", customer_data)
 
-        elif st.session_state.page == "Customer Lifetime Value":
+            # st.write(f"Total for Customer ID {total_values}")
 
-            display_input_fields(disabled=True)
+            
 
             col1, col2, col3 = st.columns([1,2,1])
 
@@ -453,14 +481,19 @@ def main():
 
             if clv_button:
                 
-                result = calculate_clv()
-                clv_result_score = "{:.2f}".format(result)
+                result = ARIMA_Model_Prediction(total_values)
+                print(result)
+                clv_result_score = "{:.2f}".format(float(result[0]))
+                clv_result_score_2 = "{:.2f}".format(float(result[1]))
                 st.session_state.clv_result = clv_result_score
-                st.session_state.customer_lifetime_value_completed = True
+                st.session_state.clv_result_2 = clv_result_score_2
+                st.session_state.sales_forcasting_completed = True
                 st.rerun() 
             
             if st.session_state.clv_result:
-                st.success(f"Customer {st.session_state.Name}'s Lifetime Value (CLV) is {st.session_state.clv_result}")
+                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 1st month is {st.session_state.clv_result}")
+            if st.session_state.clv_result_2:
+                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 2nd month is {st.session_state.clv_result_2}")
                 
 
             if reset_button:
