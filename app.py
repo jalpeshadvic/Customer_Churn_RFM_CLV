@@ -6,7 +6,6 @@ from datetime import datetime
 from PIL import Image
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
-from pmdarima import auto_arima
 
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
