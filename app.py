@@ -6,6 +6,7 @@ from datetime import datetime
 from PIL import Image
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.stattools import adfuller
+from pmdarima import auto_arima
 
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
@@ -26,12 +27,10 @@ st.markdown(hide_default_format, unsafe_allow_html=True)
 
 def assign_recency_score(recency, recency_quartiles):
     if recency <= recency_quartiles[0]:
-        return 5
-    elif recency <= recency_quartiles[1]:
         return 4
-    elif recency <= recency_quartiles[2]:
+    elif recency <= recency_quartiles[1]:
         return 3
-    elif recency <= recency_quartiles[3]:
+    elif recency <= recency_quartiles[2]:
         return 2
     else:
         return 1
@@ -44,10 +43,8 @@ def assign_frequency_score(frequency, frequency_quartiles):
         return 2
     elif frequency <= frequency_quartiles[2]:
         return 3
-    elif frequency <= frequency_quartiles[3]:
-        return 4
     else:
-        return 5
+        return 4
 
 # Function to assign Monetary score based on predefined quartiles
 def assign_monetary_score(monetary, monetary_quartiles):
@@ -57,27 +54,25 @@ def assign_monetary_score(monetary, monetary_quartiles):
         return 2
     elif monetary <= monetary_quartiles[2]:
         return 3
-    elif monetary <= monetary_quartiles[3]:
-        return 4
     else:
-        return 5
+        return 4
 
 # Function to assign customer segments based on RFM class
 def Segment_macro(rfm_class):
-    if rfm_class in ['555', '554', '544', '545', '454', '455', '445', '543', '444', '435', '355', '354', '345', '344', '335',
-                     '553', '552', '551', '541', '542', '533', '532', '531', '452', '451', '442', '441', '431', '453', '433', '432',
-                     '423', '353', '352', '351', '342', '341', '333', '323']:
-        return 'Loyal_Customer'
-    elif rfm_class in ['512', '511', '422', '421', '412', '411', '311', '525', '524', '523', '522', '521', '515', '514', '513',
-                       '425', '424', '413', '414', '415', '315', '314', '313', '535', '534', '443', '434', '343', '334', '325', '324']:
-        return 'Promising_Customer'
-    elif rfm_class in ['331', '321', '312', '221', '213', '231', '241', '251', '255', '254', '245', '244', '253', '252', '243', '242',
-                       '235', '234', '225', '224', '152', '153', '145', '143', '142', '135', '134', '133', '125', '124', '155', '154',
-                       '144', '214', '215', '115', '114', '113']:
-        return 'Sleep_Customer'
-    elif rfm_class in ['332', '322', '231', '241', '251', '233', '232', '223', '222', '132', '123', '122', '212', '211', '111', '112',
-                       '121', '131', '141', '151']:
-        return 'Lost_Customer'
+    if rfm_class in ['112' ,'113', '122', '123', '133','132', '211', '212', '213', '221', '222', '223', '231','232', '233', '311', '312', '313', '321',
+                    '322', '323', '331', '332', '333', '411', '412',
+                    '413', '421','422', '423', '431','432', '433']:
+        return 'New Customer'
+    elif rfm_class in ['114','124', '134', '214', '224', '234', '314', '324', '334', '414', '424', '434']:
+        return 'Big Spender'
+    elif rfm_class in ['144', '143', '142', '141', '242', '243', '244', '344', '343', '441', '442', '443']:
+        return 'Loyal Customer'
+    elif rfm_class in ['444']:
+        return 'Best Customer'
+    elif rfm_class in ['121','131']:
+        return 'Lost Customer'
+    elif rfm_class in ['111']:
+        return 'DeadBeats'
     else:
         return 'Other'
 
@@ -129,11 +124,11 @@ def create_wizard_html(current_page):
     return html
 
 def rfm_analysis():
-    recency_quartiles = [111, 164, 237, 280]
-    frequency_quartiles = [1, 1, 3, 5]
-    monetary_quartiles = [100, 260, 814.92, 3299.90]
+    recency_quartiles = [17, 50, 141]
+    frequency_quartiles = [1, 2, 5]
+    monetary_quartiles = [307.245, 674.450, 1661.640]
     # Step 1: Calculate Recency (days since last purchase)
-    recent_date = datetime(2021, 9, 30)
+    recent_date = datetime(2011, 12, 9)
     last_purchase_date = pd.to_datetime(st.session_state.Last_purchase_date)
     recency = (recent_date - last_purchase_date).days
 
@@ -227,7 +222,7 @@ def display_input_fields(disabled=False):
     with col1:
         status_options = ['Canceled', 'Delivered', 'Returned']
         status_index = status_options.index(st.session_state.get('status', 'canceled'))
-        st.selectbox.multiselect('Average Status of Product *', status_options, index=status_index, disabled=disabled, key='status_display')
+        st.selectbox('Average Status of Product *', status_options, index=status_index, disabled=disabled, key='status_display')
     with col2:
         payment_options = ['COD', 'EMI', 'Paid via Banktransfer', 'Paid via Wallet']
         st.multiselect('Payment Method *', payment_options, default=st.session_state.get('payment_method', []), disabled=disabled, key='payment_method_display')
@@ -388,12 +383,13 @@ def main():
             # st.session_state.Customer_Since = st.date_input('Customer since',min_value=min_date, max_value=max_date)
             col1, col2 = st.columns(2)
             with col1:
-                min_date = datetime(1980,1,1)
-                max_date = datetime(2021, 9, 30)
+                min_date = datetime(2010,12,1)
+                max_date = datetime(2011, 12, 9)
                 st.session_state.First_purchase_date = st.date_input('First Purchase Product Date',min_value=min_date, max_value=max_date)
             with col2:
-                max_date = datetime(2021, 9, 30)
-                st.session_state.Last_purchase_date = st.date_input('Last Purchase Product Date', max_value=max_date)
+                min_date = datetime(2010,12,1)
+                max_date = datetime(2011, 12, 9)
+                st.session_state.Last_purchase_date = st.date_input('Last Purchase Product Date',min_value=min_date, max_value=max_date)
             st.session_state.frequency = st.number_input('Frequency of Customer *', min_value=1)
             col1, col2 = st.columns(2)
             with col1:
@@ -416,7 +412,7 @@ def main():
                 # Perform RFM analysis based on the user inputs
                     rfm_class, customer_segment = rfm_analysis()       
                 # Display the RFM result and customer segment
-                    st.success(f"Customer {st.session_state.Name}'s RFM Class is {rfm_class} and Segment is {customer_segment}")   
+                    st.success(f"Customer {st.session_state.Name}'s Segment is {customer_segment}")   
             if next_button:
                 st.session_state.behavioral_analysis_completed = True
                 st.session_state.page = "Churn Prediction"
