@@ -4,6 +4,10 @@ import numpy as np
 import pickle
 from datetime import datetime
 from PIL import Image
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.stattools import adfuller
+from pmdarima import auto_arima
+
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
 st.set_page_config(page_title= 'Customer Churn Prediction App',layout="wide", page_icon=Im)
@@ -246,7 +250,22 @@ def display_input_fields(disabled=False):
     with col2:
         st.number_input('Return Rate *', min_value=0, value=st.session_state.get('return_rate', 0), disabled=disabled, key='return_rate_display')
 
+def ARIMA_Model_Prediction(data_col):
+    person = list(data_col)
+    Dataset = adfuller(person,autolag="AIC")
+    print(Dataset)
+    if Dataset[1]<0.05:
+        print("Data is Stationary")
+        stepwise_fit = auto_arima(person,trace=True,suppress_warnings=True)
+        order =  stepwise_fit.order
+        model = ARIMA(person,order=order)
+        model = model.fit()
+        pred = model.predict(start=8,end=13)
+        prediction = list(pred)
+        return prediction[-2:]
 
+    else:
+         print("Data is Non-Stationary")
 
 def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent,purchase_diversity,return_rate):
     scaled_features = scaler.transform([[frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate]])
@@ -268,6 +287,7 @@ def main():
             st.session_state.sales_forcasting_completed = False
             st.session_state.prediction_result = None
             st.session_state.clv_result = None
+            st.session_state.clv_result_2 = None
             
             # Use st.rerun() instead of st.experimental_rerun()
             st.rerun()
@@ -280,6 +300,7 @@ def main():
             st.session_state.sales_forcasting_completed = False
             st.session_state.prediction_result = None
             st.session_state.clv_result = None
+            st.session_state.clv_result_2 = None
         
         html_temp = """
         <style>
@@ -437,7 +458,18 @@ def main():
 
         elif st.session_state.page == "Sales Forcasting":
 
-            display_input_fields(disabled=True)
+            df = pd.read_csv('Customer_data.csv')
+            st.session_state.customer_ID = st.selectbox("Select Customer ID", df['CustomerID'].unique(), index=None)
+
+            customer_data = df[df['CustomerID'] == st.session_state.customer_ID]
+
+            total_values = customer_data['Total'].values
+
+            st.write(f"Data for Customer ID {st.session_state.customer_ID}:", customer_data)
+
+            # st.write(f"Total for Customer ID {total_values}")
+
+            
 
             col1, col2, col3 = st.columns([1,2,1])
 
@@ -450,14 +482,19 @@ def main():
 
             if clv_button:
                 
-                result = calculate_clv()
-                clv_result_score = "{:.2f}".format(result)
+                result = ARIMA_Model_Prediction(total_values)
+                print(result)
+                clv_result_score = "{:.2f}".format(float(result[0]))
+                clv_result_score_2 = "{:.2f}".format(float(result[1]))
                 st.session_state.clv_result = clv_result_score
+                st.session_state.clv_result_2 = clv_result_score_2
                 st.session_state.sales_forcasting_completed = True
                 st.rerun() 
             
             if st.session_state.clv_result:
-                st.success(f"Customer {st.session_state.Name}'s Lifetime Value (CLV) is {st.session_state.clv_result}")
+                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 1st month is {st.session_state.clv_result}")
+            if st.session_state.clv_result_2:
+                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 2nd month is {st.session_state.clv_result_2}")
                 
 
             if reset_button:
