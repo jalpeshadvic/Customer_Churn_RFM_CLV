@@ -10,15 +10,6 @@ import tensorflow as tf
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
 st.set_page_config(page_title= 'Customer Churn Prediction App',layout="wide", page_icon=Im)
 
-st.markdown("""
-    <style>
-    body {
-        font-weight: bold; 
-        color: #000000;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
 with open('New_Model_Churn.pkl', 'rb') as file:
     model = pickle.load(file)
 
