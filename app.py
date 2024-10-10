@@ -319,7 +319,7 @@ def main():
             }
         </style>
         <div style="background-color: #ADC2FF; padding: 1px; margin-bottom: 10px;">
-            <h2 style="color: black; text-align:center;">Customer Churn Prediction</h2>
+            <h2 style="color: black; text-align:center;">eCommerce Customer Prediction</h2>
         </div>
         <div style="text-align: right; margin-bottom: 20px;">
             <p style="color: red; font-style: italic;">All fields are compulsory.</p>
