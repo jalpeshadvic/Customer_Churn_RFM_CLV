@@ -331,7 +331,7 @@ def main():
 
         st.markdown(create_wizard_html(st.session_state.page), unsafe_allow_html=True)
 
-        st.sidebar.markdown("<span style='font-size: 20px; font-weight: bold; color: #520052;'>Customer Details</span>", unsafe_allow_html=True)
+        st.sidebar.markdown("<span style='font-size: 20px; font-weight: bold; color: #520052;'>Customer Insights</span>", unsafe_allow_html=True)
         for page in pages:
             is_completed = st.session_state.get(f"{page.lower().replace(' ', '_')}_completed", False)
             is_current = st.session_state.page == page
