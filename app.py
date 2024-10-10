@@ -401,7 +401,10 @@ def main():
             frequency = st.session_state.frequency
             monetary = st.session_state.total_spent
             avg_order_value = monetary / frequency
-            scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,st.session_state.Discount_Percent, st.session_state.purchase_diversity, st.session_state.return_rate)
+            Discount_Percent = st.session_state.Discount_Percent
+            purchase_diversity = st.session_state.purchase_diversity
+            return_rate = st.session_state.return_rate
+            scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity,return_rate)
             result = predict_output(scaled_features)
             # mapped_status, mapped_Product_Category,mapped_Payment_Method,mapped_Gender = map_categorical_inputs(st.session_state.status,st.session_state.category, 
             #                                                                                     st.session_state.payment_method, st.session_state.Gender)
