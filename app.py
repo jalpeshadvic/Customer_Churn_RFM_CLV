@@ -261,7 +261,7 @@ def ARIMA_Model_Prediction(data_col):
     else:
          print("Data is Non-Stationary")
 
-def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent,purchase_diversity,return_rate):
+def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate):
     scaled_features = scaler.transform([[frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate]])
     return scaled_features[0]
 
@@ -396,10 +396,16 @@ def main():
                 st.session_state.Discount_Percent = st.number_input('Discount_Percent (%) *', min_value=0)
             with col2:
                 st.session_state.return_rate = st.number_input('Return Rate *', min_value=0)
-
+            
+            recency = (datetime(2011,12,9) - pd.to_datetime(st.session_state.Last_purchase_date)).days
+            frequency = st.session_state.frequency
+            monetary = st.session_state.total_spent
+            avg_order_value = monetary / frequency
+            scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,st.session_state.Discount_Percent, st.session_state.purchase_diversity, st.session_state.return_rate)
+            result = predict_output(scaled_features)
             # mapped_status, mapped_Product_Category,mapped_Payment_Method,mapped_Gender = map_categorical_inputs(st.session_state.status,st.session_state.category, 
             #                                                                                     st.session_state.payment_method, st.session_state.Gender)
-
+            st.session_state.result = result
             col1, col2, col3 = st.columns([1,2,1])
 
             with col2:
@@ -421,10 +427,6 @@ def main():
         elif st.session_state.page == "Churn Prediction":
 
             display_input_fields(disabled=True)
-            recency = (datetime(2021,9,30) - pd.to_datetime(st.session_state.Last_purchase_date)).days
-            frequency = st.session_state.frequency
-            monetary = st.session_state.total_spent
-            avg_order_value = monetary / frequency
 
             col1, col2, col3 = st.columns([1,2,1])
 
@@ -436,10 +438,7 @@ def main():
                 next_button = st.button("Next", key="next_button")
         
             if predict_button:
-                scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,st.session_state.Discount_Percent, st.session_state.purchase_diversity, st.session_state.return_rate)
-                # map_categorical_inputs(st.session_state.Product_Category, st.session_state.Payment_Method, st.session_state.Gender)
-                result = predict_output(scaled_features)
-                print(scaled_features)
+                result = st.session_state.result
                 formatted_result = "{:.2f}".format(float(result[0]))
                 st.session_state.prediction_result = formatted_result
                 st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
