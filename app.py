@@ -9,6 +9,16 @@ import tensorflow as tf
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
 st.set_page_config(page_title= 'Customer Churn Prediction App',layout="wide", page_icon=Im)
+
+st.markdown("""
+    <style>
+    body {
+        font-weight: bold; 
+        color: #000000;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 with open('New_Model_Churn.pkl', 'rb') as file:
     model = pickle.load(file)
 
@@ -464,14 +474,14 @@ def main():
                 churn_prediction = int(result[0])
 
                 if churn_prediction == 0:
-                    st.info("This customer shows no recent activity. Consider reaching out with targeted offers to reactivate their interest.")
-                    st.info("Alert!! The customer hasn't engaged very recently. It might be a good time to send a personalized re-engagement campaign.")
+                    st.error("This customer shows no recent activity. Consider reaching out with targeted offers to reactivate their interest.")
+                    st.error("🚨 Alert!! The customer hasn't engaged very recently. It might be a good time to send a personalized re-engagement campaign.")
                 elif churn_prediction == 1:
                     st.warning("Immediate action is required. This customer is at high risk of churn. Consider offering exclusive deals or provide enhanced customer support.")
-                    st.warning("Warning!! The customer is likely to churn. You might want to intervene with retention strategies like loyalty programs or satisfaction surveys.")
+                    st.warning("⚠️  Warning!! The customer is likely to churn. You might want to intervene with retention strategies like loyalty programs or satisfaction surveys.")
                 elif churn_prediction == 2:
                     st.success("This customer is showing strong engagement and doesn't show any signs to churn. Keep up the good work to maintain their loyalty")
-                    st.success("Great News!! The customer looks satisfied with your service. Continue delivering consistent value to sustain their loyalty.")
+                    st.success("✅ Great News!! The customer looks satisfied with your service. Continue delivering consistent value to sustain their loyalty.")
             if next_button:
                 st.session_state.churn_prediction_completed = True
                 st.session_state.page = "Sales Forcasting"
@@ -515,10 +525,6 @@ def main():
                                                      st.session_state.september, st.session_state.october, st.session_state.november,
                                                      st.session_state.december]]), axis=-1)
             
-        
-
-            
-
             col1, col2, col3 = st.columns([1,2,1])
 
             with col2:
