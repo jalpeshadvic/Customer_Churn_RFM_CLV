@@ -401,7 +401,10 @@ def main():
             frequency = st.session_state.frequency
             monetary = st.session_state.total_spent
             avg_order_value = monetary / frequency
-            scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,st.session_state.Discount_Percent, st.session_state.purchase_diversity, st.session_state.return_rate)
+            Discount_Percent = st.session_state.Discount_Percent
+            purchase_diversity = st.session_state.purchase_diversity
+            return_rate = st.session_state.return_rate
+            scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity,return_rate)
             result = predict_output(scaled_features)
             # mapped_status, mapped_Product_Category,mapped_Payment_Method,mapped_Gender = map_categorical_inputs(st.session_state.status,st.session_state.category, 
             #                                                                                     st.session_state.payment_method, st.session_state.Gender)
@@ -418,7 +421,23 @@ def main():
                 # Perform RFM analysis based on the user inputs
                     rfm_class, customer_segment = rfm_analysis()       
                 # Display the RFM result and customer segment
-                    st.success(f"Customer {st.session_state.Name}'s Segment is {customer_segment}")   
+                    st.success(f"Customer {st.session_state.Name}'s Segment is {customer_segment}")
+                    segment = Segment_macro(rfm_class)
+                    if segment == 'New Customer':
+                        st.info("New Customer: These customers are just starting their journey with you. Engage them with a personalized welcome campaign.")
+                    elif segment == 'Big Spender':
+                        st.success("Big Spender: These customers spend a lot on your offerings. Keep them engaged with VIP perks or exclusive offers.")
+                    elif segment == 'Loyal Customer':
+                        st.success("Loyal Customer: Highly engaged and frequent buyers. Focus on retention with loyalty programs and personalized discounts.")
+                    elif segment == 'Best Customer':
+                        st.success("Best Customer: Your top-tier customers. Offer them VIP events, early access to new products, or simply show your appreciation.")
+                    elif segment == 'Lost Customer':
+                        st.warning("Lost Customer: These customers haven't purchased in a while. Re-engage them with special offers or win-back campaigns.")
+                    elif segment == 'DeadBeats':
+                        st.warning("DeadBeats: These customers are inactive. You might send a 'We Miss You' email or stop targeting them.")
+                    else:
+                        st.info("Other: This customer doesn't fit into a specific segment. Further analysis might be required.")
+   
             if next_button:
                 st.session_state.behavioral_analysis_completed = True
                 st.session_state.page = "Churn Prediction"
@@ -440,8 +459,19 @@ def main():
             if predict_button:
                 result = st.session_state.result
                 formatted_result = "{:.2f}".format(float(result[0]))
-                st.session_state.prediction_result = formatted_result
-                st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
+                # st.session_state.prediction_result = formatted_result
+                # st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
+                churn_prediction = int(result[0])
+
+                if churn_prediction == 0:
+                    st.info("This customer shows no recent activity or engagement. Consider reaching out with targeted offers to reactivate their interest.")
+                    st.info("The customer hasn't engaged recently. It might be a good time to send a personalized re-engagement campaign.")
+                elif churn_prediction == 1:
+                    st.warning("This customer is at high risk of churn. Immediate action is required—consider offering exclusive deals or enhanced customer support.")
+                    st.warning("Warning: This customer is likely to churn. You might want to intervene with retention strategies like loyalty programs or satisfaction surveys.")
+                elif churn_prediction == 2:
+                    st.success("This customer is showing strong engagement and is unlikely to churn. Keep up the good work in maintaining their loyalty!")
+                    st.success("Great news! This customer is satisfied and not at risk of churn. Continue delivering consistent value to sustain their loyalty.")
             if next_button:
                 st.session_state.churn_prediction_completed = True
                 st.session_state.page = "Sales Forcasting"
