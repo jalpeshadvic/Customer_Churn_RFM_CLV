@@ -4,9 +4,7 @@ import numpy as np
 import pickle
 from datetime import datetime
 from PIL import Image
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
-from pmdarima import auto_arima
+import tensorflow as tf
 
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
@@ -16,6 +14,8 @@ with open('New_Model_Churn.pkl', 'rb') as file:
 
 with open('new_scaler.pkl', 'rb') as scaler_file:
     scaler = pickle.load(scaler_file)
+
+sales_model = tf.keras.models.load_model('model.keras')
 
 hide_default_format = """
        <style>
@@ -440,19 +440,19 @@ def main():
                     st.success(f"Customer {st.session_state.Name}'s Segment is {customer_segment}")
                     segment = Segment_macro(rfm_class)
                     if segment == 'New Customer':
-                        st.info("New Customer: These customers are just starting their journey with you. Engage them with a personalized welcome campaign.")
+                        st.info(f"{st.session_state.Name} is just starting their journey with you. Engage them with a personalized welcome campaign.")
                     elif segment == 'Big Spender':
-                        st.success("Big Spender: These customers spend a lot on your offerings. Keep them engaged with VIP perks or exclusive offers.")
-                    elif segment == 'Loyal Customer':
-                        st.success("Loyal Customer: Highly engaged and frequent buyers. Focus on retention with loyalty programs and personalized discounts.")
-                    elif segment == 'Best Customer':
-                        st.success("Best Customer: Your top-tier customers. Offer them VIP events, early access to new products, or simply show your appreciation.")
+                        st.success(f"{st.session_state.Name} spends a lot on your offerings. Keep them engaged with VIP perks or exclusive offers.")
+                    elif segment == 'Active Loyal':
+                        st.success(f"{st.session_state.Name} is highly engaged and frequent buyer. Focus on retention with loyalty programs and personalized discounts.")
+                    elif segment == 'High-valued Customer':
+                        st.success(f"{st.session_state.Name} is your top-tier customer. Offer them VIP events, early access to new products, or simply show your appreciation.")
                     elif segment == 'Lost Customer':
-                        st.warning("Lost Customer: These customers haven't purchased in a while. Re-engage them with special offers or win-back campaigns.")
-                    elif segment == 'DeadBeats':
-                        st.warning("DeadBeats: These customers are inactive. You might send a 'We Miss You' email or stop targeting them.")
+                        st.warning(f"{st.session_state.Name} hasn't purchased anything in a while. Re-engage them with special offers or win-back campaigns.")
+                    elif segment == 'Dead Beats':
+                        st.warning(f"{st.session_state.Name} has been inactive since long. You might send a 'We Miss You' email or offer some attractive discounts to reengage them.")
                     else:
-                        st.info("Other: This customer doesn't fit into a specific segment. Further analysis might be required.")
+                        st.info(f"{st.session_state.Name} doesn't fit into any specific segment. Further analysis might be required.")
    
             if next_button:
                 st.session_state.behavioral_analysis_completed = True
@@ -480,31 +480,58 @@ def main():
                 churn_prediction = int(result[0])
 
                 if churn_prediction == 0:
-                    st.info("This customer shows no recent activity or engagement. Consider reaching out with targeted offers to reactivate their interest.")
-                    st.info("The customer hasn't engaged recently. It might be a good time to send a personalized re-engagement campaign.")
+                    st.info("This customer shows no recent activity. Consider reaching out with targeted offers to reactivate their interest.")
+                    st.info("Alert!! The customer hasn't engaged very recently. It might be a good time to send a personalized re-engagement campaign.")
                 elif churn_prediction == 1:
-                    st.warning("This customer is at high risk of churn. Immediate action is required—consider offering exclusive deals or enhanced customer support.")
-                    st.warning("Warning: This customer is likely to churn. You might want to intervene with retention strategies like loyalty programs or satisfaction surveys.")
+                    st.warning("Immediate action is required. This customer is at high risk of churn. Consider offering exclusive deals or provide enhanced customer support.")
+                    st.warning("Warning!! The customer is likely to churn. You might want to intervene with retention strategies like loyalty programs or satisfaction surveys.")
                 elif churn_prediction == 2:
-                    st.success("This customer is showing strong engagement and is unlikely to churn. Keep up the good work in maintaining their loyalty!")
-                    st.success("Great news! This customer is satisfied and not at risk of churn. Continue delivering consistent value to sustain their loyalty.")
+                    st.success("This customer is showing strong engagement and doesn't show any signs to churn. Keep up the good work to maintain their loyalty")
+                    st.success("Great News!! The customer looks satisfied with your service. Continue delivering consistent value to sustain their loyalty.")
             if next_button:
                 st.session_state.churn_prediction_completed = True
                 st.session_state.page = "Sales Forcasting"
                 st.rerun()
 
         elif st.session_state.page == "Sales Forcasting":
+            st.text_input('Customer Full Name *', value=st.session_state.get('Name', ''), disabled=True, key='Name_display')
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.january = st.number_input("january month sales *", min_value=1)
+            with col2:
+                st.session_state.february = st.number_input("February month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.march = st.number_input("March month sales *", min_value=1)
+            with col2:
+                st.session_state.april = st.number_input("April month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.may = st.number_input("May month sales *", min_value=1)
+            with col2:
+                st.session_state.june = st.number_input("June month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.july = st.number_input("July month sales *", min_value=1)
+            with col2:
+                st.session_state.august = st.number_input("August month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.september = st.number_input("September month sales *", min_value=1)
+            with col2:
+                st.session_state.october = st.number_input("October month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.november = st.number_input("November month sales *", min_value=1)
+            with col2:
+                st.session_state.december = st.number_input("December month sales *", min_value=1)
 
-            df = pd.read_csv('Customer_data.csv')
-            st.session_state.customer_ID = st.selectbox("Select Customer ID", df['CustomerID'].unique(), index=None)
-
-            customer_data = df[df['CustomerID'] == st.session_state.customer_ID]
-
-            total_values = customer_data['Total'].values
-
-            st.write(f"Data for Customer ID {st.session_state.customer_ID}:", customer_data)
-
-            # st.write(f"Total for Customer ID {total_values}")
+            forcast_data = np.expand_dims(np.array([[st.session_state.march, st.session_state.april, st.session_state.may,
+                                                     st.session_state.june, st.session_state.july, st.session_state.august, 
+                                                     st.session_state.september, st.session_state.october, st.session_state.november,
+                                                     st.session_state.december]]), axis=-1)
+            
+        
 
             
 
@@ -518,20 +545,20 @@ def main():
                     reset_button = st.button("Reset", key="reset_button")
 
             if clv_button:
+                prediction_sales = sales_model.predict(forcast_data)[0]
                 
-                result = ARIMA_Model_Prediction(total_values)
-                print(result)
-                clv_result_score = "{:.2f}".format(float(result[0]))
-                clv_result_score_2 = "{:.2f}".format(float(result[1]))
+                # result = ARIMA_Model_Prediction(total_values)
+                print(prediction_sales)
+                clv_result_score = "{:.2f}".format(float(prediction_sales[0]))
+                clv_result_score_2 = "{:.2f}".format(float(prediction_sales[1]))
                 st.session_state.clv_result = clv_result_score
                 st.session_state.clv_result_2 = clv_result_score_2
                 st.session_state.sales_forcasting_completed = True
                 st.rerun() 
-            
             if st.session_state.clv_result:
-                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 1st month is {st.session_state.clv_result}")
+                st.success(f"The Customer {st.session_state.Name}'s purchase for next month is expected to be {st.session_state.clv_result}")
             if st.session_state.clv_result_2:
-                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 2nd month is {st.session_state.clv_result_2}")
+                st.success(f"The Customer {st.session_state.Name}'s purchase for 2nd next month is expected to be is {st.session_state.clv_result_2}")
                 
 
             if reset_button:
