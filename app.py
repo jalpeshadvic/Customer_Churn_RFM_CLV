@@ -481,7 +481,7 @@ def main():
             st.text_input('Customer Full Name *', value=st.session_state.get('Name', ''), disabled=True, key='Name_display')
             col1,col2 = st.columns(2)
             with col1:
-                st.session_state.january = st.number_input("january month sales *", min_value=1)
+                st.session_state.january = st.number_input("January month sales *", min_value=1)
             with col2:
                 st.session_state.february = st.number_input("February month sales *", min_value=1)
             col1,col2 = st.columns(2)
