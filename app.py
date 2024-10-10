@@ -66,13 +66,13 @@ def Segment_macro(rfm_class):
     elif rfm_class in ['114','124', '134', '214', '224', '234', '314', '324', '334', '414', '424', '434']:
         return 'Big Spender'
     elif rfm_class in ['144', '143', '142', '141', '242', '243', '244', '344', '343', '441', '442', '443']:
-        return 'Loyal Customer'
+        return 'Active Loyal'
     elif rfm_class in ['444']:
-        return 'Best Customer'
+        return 'High-valued Customer'
     elif rfm_class in ['121','131']:
         return 'Lost Customer'
     elif rfm_class in ['111']:
-        return 'DeadBeats'
+        return 'Dead Beats'
     else:
         return 'Other'
 
@@ -248,22 +248,6 @@ def display_input_fields(disabled=False):
     with col2:
         st.number_input('Return Rate *', min_value=0, value=st.session_state.get('return_rate', 0), disabled=disabled, key='return_rate_display')
 
-def ARIMA_Model_Prediction(data_col):
-    person = list(data_col)
-    Dataset = adfuller(person,autolag="AIC")
-    print(Dataset)
-    if Dataset[1]<0.05:
-        print("Data is Stationary")
-        stepwise_fit = auto_arima(person,trace=True,suppress_warnings=True)
-        order =  stepwise_fit.order
-        model = ARIMA(person,order=order)
-        model = model.fit()
-        pred = model.predict(start=8,end=13)
-        prediction = list(pred)
-        return prediction[-2:]
-
-    else:
-         print("Data is Non-Stationary")
 
 def map_scalling_features(Quantity, UnitPrice, Total,Frequency, Monetary,recency,r_quantile,f_quantile,m_quantile,rfm_quantile):
     scaled_features = scaler.transform([[Quantity, UnitPrice, Total,Frequency, Monetary,recency,r_quantile,f_quantile,m_quantile,rfm_quantile]])
