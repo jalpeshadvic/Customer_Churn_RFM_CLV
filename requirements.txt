@@ -4,3 +4,4 @@ numpy==1.26.4
 scikit-learn
 statsmodels
 pmdarima==2.0.4
+tensorflow
