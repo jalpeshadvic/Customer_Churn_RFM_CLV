@@ -4,18 +4,18 @@ import numpy as np
 import pickle
 from datetime import datetime
 from PIL import Image
-from statsmodels.tsa.arima.model import ARIMA
-from statsmodels.tsa.stattools import adfuller
-from pmdarima import auto_arima
+import tensorflow as tf
 
 
 Im = Image.open('customer-retention-vector-icon-client-return-business-marketing-user-consumer-care-customer-retention-vector-icon-client-return-138279322.webp')
 st.set_page_config(page_title= 'Customer Churn Prediction App',layout="wide", page_icon=Im)
-with open('model_logic_churn.pkl', 'rb') as file:
+with open('New_Model_Churn.pkl', 'rb') as file:
     model = pickle.load(file)
 
-with open('scaler.pkl', 'rb') as scaler_file:
+with open('new_scaler.pkl', 'rb') as scaler_file:
     scaler = pickle.load(scaler_file)
+
+sales_model = tf.keras.models.load_model('model.keras')
 
 hide_default_format = """
        <style>
@@ -66,13 +66,13 @@ def Segment_macro(rfm_class):
     elif rfm_class in ['114','124', '134', '214', '224', '234', '314', '324', '334', '414', '424', '434']:
         return 'Big Spender'
     elif rfm_class in ['144', '143', '142', '141', '242', '243', '244', '344', '343', '441', '442', '443']:
-        return 'Loyal Customer'
+        return 'Active Loyal'
     elif rfm_class in ['444']:
-        return 'Best Customer'
+        return 'High-valued Customer'
     elif rfm_class in ['121','131']:
         return 'Lost Customer'
     elif rfm_class in ['111']:
-        return 'DeadBeats'
+        return 'Dead Beats'
     else:
         return 'Other'
 
@@ -217,7 +217,11 @@ def display_input_fields(disabled=False):
         st.number_input('Total Purchase Amount (Overall) *', min_value=1, value=st.session_state.get('total_spent', 1), disabled=disabled, key='total_spent_display')
     with col2:
         st.number_input('Unique Product Category *', min_value=1, value=st.session_state.get('purchase_diversity', 1), disabled=disabled, key='purchase_diversity_display')
-    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.number_input('Average Quantity Buy *', min_value=1, value=st.session_state.get('Quantity', 1), disabled=disabled, key='Quantity_display')
+    with col2:
+        st.number_input('Average Unit Price *', min_value=1, value=st.session_state.get('UnitPrice', 1), disabled=disabled, key='UnitPrice_display')
     col1, col2 = st.columns(2)
     with col1:
         status_options = ['Canceled', 'Delivered', 'Returned']
@@ -261,8 +265,8 @@ def ARIMA_Model_Prediction(data_col):
     else:
          print("Data is Non-Stationary")
 
-def map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate):
-    scaled_features = scaler.transform([[frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity, return_rate]])
+def map_scalling_features(Quantity, UnitPrice, Total,Frequency, Monetary,recency,r_quantile,f_quantile,m_quantile,rfm_quantile):
+    scaled_features = scaler.transform([[Quantity, UnitPrice, Total,Frequency, Monetary,recency,r_quantile,f_quantile,m_quantile,rfm_quantile]])
     return scaled_features[0]
 
 
@@ -375,6 +379,11 @@ def main():
                 st.session_state.purchase_diversity = st.number_input('Unique Product Category *', min_value=1)
             col1, col2 = st.columns(2)
             with col1:
+                st.session_state.Quantity = st.number_input('Average Quantity Buy *', min_value=1)
+            with col2:
+                st.session_state.UnitPrice = st.number_input('Average Unit Price *', min_value=1)
+            col1, col2 = st.columns(2)
+            with col1:
                 st.session_state.status = st.selectbox('Average Status of Product *', ['Canceled', 'Delivered', 'Returned'])
             with col2:
                 st.session_state.payment_method = st.multiselect('Payment Method *', ['COD', 'EMI', 'Paid via Banktransfer', 'Paid via Wallet'])
@@ -398,13 +407,20 @@ def main():
                 st.session_state.return_rate = st.number_input('Return Rate *', min_value=0)
             
             recency = (datetime(2011,12,9) - pd.to_datetime(st.session_state.Last_purchase_date)).days
-            frequency = st.session_state.frequency
-            monetary = st.session_state.total_spent
-            avg_order_value = monetary / frequency
-            Discount_Percent = st.session_state.Discount_Percent
-            purchase_diversity = st.session_state.purchase_diversity
-            return_rate = st.session_state.return_rate
-            scaled_features = map_scalling_features(frequency, avg_order_value, monetary,recency,Discount_Percent, purchase_diversity,return_rate)
+            Frequency = st.session_state.frequency
+            Monetary = st.session_state.total_spent
+            Total = st.session_state.total_spent
+            Quantity = st.session_state.Quantity
+            UnitPrice = st.session_state.UnitPrice
+            recency_quartiles = [17, 50, 141]
+            frequency_quartiles = [1, 2, 5]
+            monetary_quartiles = [307.245, 674.450, 1661.640]
+            r_quantile = assign_recency_score(recency,recency_quartiles)
+            f_quantile = assign_frequency_score(Frequency,frequency_quartiles)
+            m_quantile = assign_monetary_score(Monetary, monetary_quartiles)
+            rfm_quantile = str(r_quantile) + str(f_quantile) + str(m_quantile)
+            
+            scaled_features = map_scalling_features(Quantity, UnitPrice, Total,Frequency, Monetary,recency,r_quantile,f_quantile,m_quantile,rfm_quantile)
             result = predict_output(scaled_features)
             # mapped_status, mapped_Product_Category,mapped_Payment_Method,mapped_Gender = map_categorical_inputs(st.session_state.status,st.session_state.category, 
             #                                                                                     st.session_state.payment_method, st.session_state.Gender)
@@ -421,7 +437,23 @@ def main():
                 # Perform RFM analysis based on the user inputs
                     rfm_class, customer_segment = rfm_analysis()       
                 # Display the RFM result and customer segment
-                    st.success(f"Customer {st.session_state.Name}'s Segment is {customer_segment}")   
+                    st.success(f"Customer {st.session_state.Name}'s Segment is {customer_segment}")
+                    segment = Segment_macro(rfm_class)
+                    if segment == 'New Customer':
+                        st.info(f"{st.session_state.Name} is just starting their journey with you. Engage them with a personalized welcome campaign.")
+                    elif segment == 'Big Spender':
+                        st.success(f"{st.session_state.Name} spends a lot on your offerings. Keep them engaged with VIP perks or exclusive offers.")
+                    elif segment == 'Active Loyal':
+                        st.success(f"{st.session_state.Name} is highly engaged and frequent buyer. Focus on retention with loyalty programs and personalized discounts.")
+                    elif segment == 'High-valued Customer':
+                        st.success(f"{st.session_state.Name} is your top-tier customer. Offer them VIP events, early access to new products, or simply show your appreciation.")
+                    elif segment == 'Lost Customer':
+                        st.warning(f"{st.session_state.Name} hasn't purchased anything in a while. Re-engage them with special offers or win-back campaigns.")
+                    elif segment == 'Dead Beats':
+                        st.warning(f"{st.session_state.Name} has been inactive since long. You might send a 'We Miss You' email or offer some attractive discounts to reengage them.")
+                    else:
+                        st.info(f"{st.session_state.Name} doesn't fit into any specific segment. Further analysis might be required.")
+   
             if next_button:
                 st.session_state.behavioral_analysis_completed = True
                 st.session_state.page = "Churn Prediction"
@@ -443,25 +475,63 @@ def main():
             if predict_button:
                 result = st.session_state.result
                 formatted_result = "{:.2f}".format(float(result[0]))
-                st.session_state.prediction_result = formatted_result
-                st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
+                # st.session_state.prediction_result = formatted_result
+                # st.success(f"Probability of Customer Churn is {st.session_state.prediction_result}")
+                churn_prediction = int(result[0])
+
+                if churn_prediction == 0:
+                    st.info("This customer shows no recent activity. Consider reaching out with targeted offers to reactivate their interest.")
+                    st.info("Alert!! The customer hasn't engaged very recently. It might be a good time to send a personalized re-engagement campaign.")
+                elif churn_prediction == 1:
+                    st.warning("Immediate action is required. This customer is at high risk of churn. Consider offering exclusive deals or provide enhanced customer support.")
+                    st.warning("Warning!! The customer is likely to churn. You might want to intervene with retention strategies like loyalty programs or satisfaction surveys.")
+                elif churn_prediction == 2:
+                    st.success("This customer is showing strong engagement and doesn't show any signs to churn. Keep up the good work to maintain their loyalty")
+                    st.success("Great News!! The customer looks satisfied with your service. Continue delivering consistent value to sustain their loyalty.")
             if next_button:
                 st.session_state.churn_prediction_completed = True
                 st.session_state.page = "Sales Forcasting"
                 st.rerun()
 
         elif st.session_state.page == "Sales Forcasting":
+            st.text_input('Customer Full Name *', value=st.session_state.get('Name', ''), disabled=True, key='Name_display')
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.january = st.number_input("january month sales *", min_value=1)
+            with col2:
+                st.session_state.february = st.number_input("February month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.march = st.number_input("March month sales *", min_value=1)
+            with col2:
+                st.session_state.april = st.number_input("April month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.may = st.number_input("May month sales *", min_value=1)
+            with col2:
+                st.session_state.june = st.number_input("June month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.july = st.number_input("July month sales *", min_value=1)
+            with col2:
+                st.session_state.august = st.number_input("August month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.september = st.number_input("September month sales *", min_value=1)
+            with col2:
+                st.session_state.october = st.number_input("October month sales *", min_value=1)
+            col1,col2 = st.columns(2)
+            with col1:
+                st.session_state.november = st.number_input("November month sales *", min_value=1)
+            with col2:
+                st.session_state.december = st.number_input("December month sales *", min_value=1)
 
-            df = pd.read_csv('Customer_data.csv')
-            st.session_state.customer_ID = st.selectbox("Select Customer ID", df['CustomerID'].unique(), index=None)
-
-            customer_data = df[df['CustomerID'] == st.session_state.customer_ID]
-
-            total_values = customer_data['Total'].values
-
-            st.write(f"Data for Customer ID {st.session_state.customer_ID}:", customer_data)
-
-            # st.write(f"Total for Customer ID {total_values}")
+            forcast_data = np.expand_dims(np.array([[st.session_state.march, st.session_state.april, st.session_state.may,
+                                                     st.session_state.june, st.session_state.july, st.session_state.august, 
+                                                     st.session_state.september, st.session_state.october, st.session_state.november,
+                                                     st.session_state.december]]), axis=-1)
+            
+        
 
             
 
@@ -475,20 +545,20 @@ def main():
                     reset_button = st.button("Reset", key="reset_button")
 
             if clv_button:
+                prediction_sales = sales_model.predict(forcast_data)[0]
                 
-                result = ARIMA_Model_Prediction(total_values)
-                print(result)
-                clv_result_score = "{:.2f}".format(float(result[0]))
-                clv_result_score_2 = "{:.2f}".format(float(result[1]))
+                # result = ARIMA_Model_Prediction(total_values)
+                print(prediction_sales)
+                clv_result_score = "{:.2f}".format(float(prediction_sales[0]))
+                clv_result_score_2 = "{:.2f}".format(float(prediction_sales[1]))
                 st.session_state.clv_result = clv_result_score
                 st.session_state.clv_result_2 = clv_result_score_2
                 st.session_state.sales_forcasting_completed = True
                 st.rerun() 
-            
             if st.session_state.clv_result:
-                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 1st month is {st.session_state.clv_result}")
+                st.success(f"The Customer {st.session_state.Name}'s purchase for next month is expected to be {st.session_state.clv_result}")
             if st.session_state.clv_result_2:
-                st.success(f"Customer {st.session_state.Name}'s Sales Forcasting for next 2nd month is {st.session_state.clv_result_2}")
+                st.success(f"The Customer {st.session_state.Name}'s purchase for 2nd next month is expected to be is {st.session_state.clv_result_2}")
                 
 
             if reset_button:
